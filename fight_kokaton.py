@@ -154,6 +154,7 @@ class Score:
         self.img = self.font.render(f"スコア：{self.score}", 0, self.col)
         self.rct = self.img.get_rect()
         self.rct.center = self.pos
+        
     def update(self, screen: pg.Surface):
         """"
         スコアを表示する
