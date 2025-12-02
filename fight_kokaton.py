@@ -157,10 +157,43 @@ class Score:
     def update(self, screen: pg.Surface):
         """"
         スコアを表示する
+        引数 screen：画面Surface
         """
         self.img = self.font.render(f"スコア：{self.score}", 0, self.col)
         self.rct.center = self.pos
         screen.blit(self.img, self.rct)
+
+
+class Explosion:
+    """
+    爆発エフェクトSurfaceを生成
+    引数1 obj：爆発したオブジェクト
+    引数2 life：爆発の表示時間
+    """
+    def __init__(self, obj: "Bomb", life: int):
+        img = pg.image.load("fig/explosion.gif")
+        img_flip = pg.transform.flip(img, True, True)
+
+        self.imgs = [img, img_flip]
+        self.img_index = 0
+        self.img = self.imgs[self.img_index]
+
+        self.rct = self.img.get_rect()
+        self.rct.center = obj.rct.center 
+        self.life = life
+    def update(self, screen: pg.Surface):
+        """
+        引数 screen：画面Surface
+        """
+        self.life -= 1 
+        
+        if self.life > 0:
+            if (self.life // 3) % 2 == 0:
+                self.img = self.imgs[0]
+            else:
+                self.img = self.imgs[1]
+                
+            screen.blit(self.img, self.rct)
 
 
 def main():
@@ -176,6 +209,7 @@ def main():
     bombs = [Bomb((255, 0, 0),10 ) for _ in range(NUM_OF_BOMBS)]
     # beam = None  # ゲーム初期化時にはビームは存在しない
     beams = []
+    explosions = []
     score = Score()
     clock = pg.time.Clock()
     tmr = 0
@@ -208,6 +242,7 @@ def main():
                     continue
                 if beam.rct.colliderect(bomb.rct):
                     # ビームが爆弾に当たったら、爆弾とビームを消す
+                    explosions.append(Explosion(bomb, 30))
                     bombs[b] = None
                     beams[a] = None
                     bird.change_img(6, screen)
@@ -230,6 +265,10 @@ def main():
                 new_beams.append(beam)
                 
         beams = new_beams
+
+        explosions = [exp for exp in explosions if exp.life > 0]
+        for exp in explosions:
+            exp.update(screen)
         for bomb in bombs:  #爆弾が存在していたら
             bomb.update(screen)
         score.update(screen)
