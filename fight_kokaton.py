@@ -142,6 +142,7 @@ class Bomb:
 
 
 class Score:
+
     def __init__(self):
         """
         引数なし
@@ -150,17 +151,17 @@ class Score:
         self.col = (0, 0, 255)
         self.score = 0
         self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30)
-        self.img = self.font.render(f"スコア:{self.score}", 0, self.col)
+        self.img = self.font.render(f"スコア：{self.score}", 0, self.col)
         self.rct = self.img.get_rect()
         self.rct.center = self.pos
     def update(self, screen: pg.Surface):
-        """
+        """"
         スコアを表示する
         """
-        self.img = self.font.render(f"スコア:{self.score}", 0, self.col)
+        self.img = self.font.render(f"スコア：{self.score}", 0, self.col)
         self.rct.center = self.pos
         screen.blit(self.img, self.rct)
-        
+
 
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
@@ -173,7 +174,8 @@ def main():
     #     bomb = Bomb((255, 0, 0), 10)
     #     bombs.append(bomb)
     bombs = [Bomb((255, 0, 0),10 ) for _ in range(NUM_OF_BOMBS)]
-    beam = None  # ゲーム初期化時にはビームは存在しない
+    # beam = None  # ゲーム初期化時にはビームは存在しない
+    beams = []
     score = Score()
     clock = pg.time.Clock()
     tmr = 0
@@ -183,7 +185,8 @@ def main():
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 # スペースキー押下でBeamクラスのインスタンス生成
-                beam = Beam(bird)            
+                beam = Beam(bird)  
+                beams.append(beam)          
         screen.blit(bg_img, [0, 0])
 
         for b, bomb in enumerate(bombs):
@@ -198,20 +201,35 @@ def main():
                 return
         
         for b, bomb in enumerate(bombs):
-            if beam is not None:
+            if bomb is None:
+                continue
+            for a, beam in enumerate(beams):
+                if beam is None:
+                    continue
                 if beam.rct.colliderect(bomb.rct):
                     # ビームが爆弾に当たったら、爆弾とビームを消す
-                    beam = None
                     bombs[b] = None
+                    beams[a] = None
                     bird.change_img(6, screen)
                     pg.display.update()
                     score.score += 1
-        bombs = [bomb for bomb in bombs if bomb is not None]
+                    break
 
+        bombs = [bomb for bomb in bombs if bomb is not None]
+        beams = [beam for beam in beams if beam is not None]
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
-        if beam is not None:  #ビームが存在していたら
+
+        new_beams = []
+        for beam in beams:  #ビームが存在していたら
             beam.update(screen)
+            yoko, tate = check_bound(beam.rct)
+            
+            
+            if yoko:
+                new_beams.append(beam)
+                
+        beams = new_beams
         for bomb in bombs:  #爆弾が存在していたら
             bomb.update(screen)
         score.update(screen)
